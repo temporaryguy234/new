@@ -530,7 +530,14 @@ const Editor = ({ animation, onClose, onSave }) => {
                   loop={true}
                   autoplay={isPlaying}
                   style={{ width: 400, height: 400 }}
-                  lottieRef={(instance) => setLottieRef(instance)}
+                  lottieRef={(instance) => {
+                    if (instance) {
+                      setLottieRef(instance);
+                      if (speed[0] !== 1) {
+                        instance.setSpeed(speed[0]);
+                      }
+                    }
+                  }}
                 />
               )}
             </div>
