@@ -347,7 +347,9 @@ const Editor = ({ animation, onClose, onSave }) => {
       console.log('AI response:', response.data);
       
       if (response.data.success && response.data.animationData) {
+        console.log('Updating animation data:', response.data.animationData);
         setCurrentAnimationData(response.data.animationData);
+        setAnimationKey(prev => prev + 1); // Force Lottie re-render
         toast({
           title: "Success",
           description: `Animation updated: ${response.data.message || 'Changes applied successfully!'}`
