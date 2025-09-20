@@ -33,10 +33,27 @@ class Animation(BaseModel):
     name: str
     url: str
     animationData: Dict[str, Any]
+    originalData: Optional[Dict[str, Any]] = None  # Store original for reset
     thumbnail: Optional[str] = None
+    settings: Optional[Dict[str, Any]] = None
+    isProject: bool = False  # True for user projects, False for templates
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Project(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    templateId: str  # Reference to original template
+    animationData: Dict[str, Any]
     settings: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ProjectCreate(BaseModel):
+    name: str
+    templateId: str
+    animationData: Dict[str, Any]
+    settings: Optional[Dict[str, Any]] = None
 
 class AnimationCreate(BaseModel):
     name: str
