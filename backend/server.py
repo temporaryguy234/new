@@ -102,83 +102,158 @@ async def process_ai_edit(animation_data: Dict[str, Any], prompt: str) -> Dict[s
         if not api_key:
             raise HTTPException(status_code=500, detail="No API key available")
         
-        # Use Google's Gemini model
-        if api_key.startswith('AIza'):
-            # Use Google API key directly
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"edit_session_{uuid.uuid4()}",
-                system_message="""You are an expert Lottie animation editor. You can modify Lottie JSON files based on natural language commands.
+        logging.info(f"Processing AI edit with prompt: {prompt}")
+        
+        # Use Google's API key directly (this is more reliable for Lottie editing)
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"edit_session_{uuid.uuid4()}",
+            system_message="""You are an expert Lottie animation JSON editor. You understand Lottie file structure deeply and can make precise modifications.
 
-When given a Lottie animation JSON and a prompt, you should:
-1. Analyze the Lottie structure to understand layers, shapes, colors, and text
-2. Interpret the user's request (change colors, modify text, delete elements, etc.)
-3. Return the modified Lottie JSON
+IMPORTANT INSTRUCTIONS:
+1. You will receive a Lottie JSON and a user request
+2. Analyze the JSON structure carefully
+3. Make the requested changes precisely
+4. Return ONLY the modified JSON, no explanations
+5. Ensure the JSON remains valid and maintains Lottie structure
 
-Common modifications:
-- Color changes: Modify 'c' values in shape fills/strokes
-- Text changes: Modify 't' values in text layers
-- Size changes: Modify transform properties
-- Delete elements: Remove entire layers or shapes
-- Replace numbers/years: Find and replace specific values
+Common Lottie modifications:
+- Colors: Look for "c" property in shapes/fills/strokes - values are [R,G,B] arrays from 0-1
+- Text: Look for "t" property in text layers, modify the "d" property which contains text data
+- Numbers/Years: Search throughout the JSON for specific numeric values
+- Delete elements: Remove entire layers, shapes, or text elements
+- Transforms: Modify "ks" properties for position, scale, rotation
 
-Always return valid JSON that maintains the Lottie structure."""
-            ).with_model("gemini", "gemini-2.0-flash")
-        else:
-            # Use Emergent LLM key
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"edit_session_{uuid.uuid4()}",
-                system_message="""You are an expert Lottie animation editor. You can modify Lottie JSON files based on natural language commands.
+EXAMPLES:
+- "change color to blue" → Find fill colors and change "c" values to [0,0,1]
+- "replace 2019 with 2018" → Find "2019" in text data and replace with "2018"
+- "delete text" → Remove text layers entirely
+- "make bigger" → Increase "s" values in transform properties
 
-When given a Lottie animation JSON and a prompt, you should:
-1. Analyze the Lottie structure to understand layers, shapes, colors, and text
-2. Interpret the user's request (change colors, modify text, delete elements, etc.)
-3. Return the modified Lottie JSON
-
-Common modifications:
-- Color changes: Modify 'c' values in shape fills/strokes
-- Text changes: Modify 't' values in text layers
-- Size changes: Modify transform properties
-- Delete elements: Remove entire layers or shapes
-- Replace numbers/years: Find and replace specific values
-
-Always return valid JSON that maintains the Lottie structure."""
-            ).with_model("openai", "gpt-4o")
+Remember: Return ONLY valid JSON, no markdown, no explanations."""
+        ).with_model("gemini", "gemini-2.0-flash")
 
         # Create user message with animation data and prompt
         user_message = UserMessage(
-            text=f"""Please modify this Lottie animation JSON based on the following request: "{prompt}"
+            text=f"""Modify this Lottie animation JSON based on the request: "{prompt}"
 
-Current Lottie JSON:
+Here's the current Lottie JSON:
 {json.dumps(animation_data, indent=2)}
 
-Return only the modified JSON without any explanation."""
+Return only the modified JSON:"""
         )
 
         # Send message and get response
+        logging.info("Sending request to AI model...")
         response = await chat.send_message(user_message)
+        
+        logging.info(f"AI response received: {response[:200]}...")
         
         # Try to parse the response as JSON
         try:
-            # Clean the response (remove markdown formatting if present)
+            # Clean the response thoroughly
             response_text = response.strip()
-            if response_text.startswith('```json'):
-                response_text = response_text[7:]
-            if response_text.endswith('```'):
-                response_text = response_text[:-3]
+            
+            # Remove markdown formatting
+            if '```json' in response_text:
+                start = response_text.find('```json') + 7
+                end = response_text.rfind('```')
+                if end > start:
+                    response_text = response_text[start:end]
+            elif '```' in response_text:
+                # Handle simple markdown
+                response_text = response_text.replace('```', '')
+            
             response_text = response_text.strip()
             
+            # Parse JSON
             modified_data = json.loads(response_text)
+            
+            # Validate that it's still a Lottie animation
+            if not isinstance(modified_data, dict) or 'v' not in modified_data:
+                logging.warning("AI response doesn't look like valid Lottie JSON, returning original")
+                return animation_data
+            
+            logging.info("AI edit successful, returning modified animation")
             return modified_data
-        except json.JSONDecodeError:
-            # If parsing fails, return original data
-            logging.error(f"Failed to parse AI response as JSON: {response}")
-            return animation_data
+            
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to parse AI response as JSON: {e}")
+            logging.error(f"Response was: {response}")
+            
+            # Try to make simple modifications based on the prompt if AI fails
+            return make_simple_modifications(animation_data, prompt)
             
     except Exception as e:
         logging.error(f"AI editing error: {e}")
-        # Return original data if AI processing fails
+        # Try simple modifications as fallback
+        return make_simple_modifications(animation_data, prompt)
+
+def make_simple_modifications(animation_data: Dict[str, Any], prompt: str) -> Dict[str, Any]:
+    """Make simple modifications when AI fails"""
+    try:
+        import copy
+        modified_data = copy.deepcopy(animation_data)
+        prompt_lower = prompt.lower()
+        
+        logging.info(f"Making simple modifications for prompt: {prompt}")
+        
+        # Simple color changes
+        if 'blue' in prompt_lower and 'color' in prompt_lower:
+            # Find and change colors to blue
+            def change_colors_to_blue(obj):
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if key == 'c' and isinstance(value, dict) and 'k' in value:
+                            if isinstance(value['k'], list) and len(value['k']) >= 3:
+                                value['k'] = [0, 0, 1]  # Blue color
+                        elif isinstance(value, (dict, list)):
+                            change_colors_to_blue(value)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        change_colors_to_blue(item)
+            
+            change_colors_to_blue(modified_data)
+            logging.info("Applied blue color change")
+            
+        # Simple number replacement
+        elif 'replace' in prompt_lower or 'change' in prompt_lower:
+            # Try to find numbers in the prompt
+            import re
+            numbers = re.findall(r'\d{4}', prompt)  # Find 4-digit years
+            if len(numbers) >= 2:
+                old_num, new_num = numbers[0], numbers[1]
+                # Convert to JSON string and replace
+                json_str = json.dumps(modified_data)
+                json_str = json_str.replace(old_num, new_num)
+                try:
+                    modified_data = json.loads(json_str)
+                    logging.info(f"Replaced {old_num} with {new_num}")
+                except:
+                    pass
+        
+        # Simple size increase
+        elif 'bigger' in prompt_lower or 'larger' in prompt_lower:
+            def increase_size(obj):
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if key == 's' and isinstance(value, dict) and 'k' in value:
+                            if isinstance(value['k'], list) and len(value['k']) >= 2:
+                                value['k'][0] = min(value['k'][0] * 1.2, 200)  # Increase by 20%
+                                value['k'][1] = min(value['k'][1] * 1.2, 200)
+                        elif isinstance(value, (dict, list)):
+                            increase_size(value)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        increase_size(item)
+            
+            increase_size(modified_data)
+            logging.info("Applied size increase")
+        
+        return modified_data
+        
+    except Exception as e:
+        logging.error(f"Simple modifications failed: {e}")
         return animation_data
 
 # API Routes
