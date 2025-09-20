@@ -336,7 +336,7 @@ const Editor = ({ animation, onClose, onSave }) => {
   // Handle speed changes
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
-    if (lottieRef) {
+    if (lottieRef && lottieRef.setSpeed) {
       lottieRef.setSpeed(newSpeed[0]);
     }
   };
@@ -351,6 +351,27 @@ const Editor = ({ animation, onClose, onSave }) => {
       } else {
         lottieRef.pause();
       }
+    }
+  };
+
+  // Handle size changes - modify the animation data itself
+  const handleSizeChange = (newSize) => {
+    setSize(newSize);
+    if (currentAnimationData) {
+      const scaleValue = newSize[0];
+      const modifiedData = { ...currentAnimationData };
+      
+      // Modify the animation size by changing layer transforms
+      if (modifiedData.layers) {
+        modifiedData.layers.forEach(layer => {
+          if (layer.ks && layer.ks.s && layer.ks.s.k) {
+            layer.ks.s.k = [scaleValue, scaleValue];
+          }
+        });
+      }
+      
+      setCurrentAnimationData(modifiedData);
+      setAnimationKey(prev => prev + 1);
     }
   };
 
