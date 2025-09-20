@@ -336,24 +336,35 @@ const Editor = ({ animation, onClose, onSave }) => {
     
     setIsProcessing(true);
     try {
+      console.log('Submitting AI prompt:', prompt);
       const response = await axios.post(`${API}/animations/edit`, {
         animationData: currentAnimationData,
         prompt: prompt,
         animationId: animation.id
       });
       
-      if (response.data.success) {
+      console.log('AI response:', response.data);
+      
+      if (response.data.success && response.data.animationData) {
         setCurrentAnimationData(response.data.animationData);
         toast({
           title: "Success",
-          description: "Animation updated successfully!"
+          description: `Animation updated: ${response.data.message || 'Changes applied successfully!'}`
+        });
+        setPrompt('');
+      } else {
+        toast({
+          title: "Info",
+          description: response.data.message || "AI processed the request, but no changes were detected.",
+          variant: "default"
         });
         setPrompt('');
       }
     } catch (error) {
+      console.error('AI editing error:', error);
       toast({
         title: "Error",
-        description: "Failed to process AI prompt. Please try again.",
+        description: "Failed to process AI prompt. Please try again with a more specific request.",
         variant: "destructive"
       });
     } finally {
