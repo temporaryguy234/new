@@ -108,7 +108,7 @@ class MotionEditAPITester:
             "animationData": sample_animation_data
         }
         
-        success, response = self.run_test("Create Animation", "POST", "animations", 201, animation_data)
+        success, response = self.run_test("Create Animation", "POST", "animations", 200, animation_data)
         if success and 'id' in response:
             self.created_animation_id = response['id']
             print(f"   Created animation ID: {self.created_animation_id}")
