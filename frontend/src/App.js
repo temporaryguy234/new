@@ -482,6 +482,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             >
               {currentAnimationData && (
                 <Lottie
+                  key={animationKey}
                   animationData={currentAnimationData}
                   loop={true}
                   autoplay={isPlaying}
