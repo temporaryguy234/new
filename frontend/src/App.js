@@ -86,10 +86,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   );
 };
 
-const ExploreTab = ({ onOpenEditor }) => (
+const ExploreTab = () => (
   <div className="max-w-4xl mx-auto">
     <div className="text-center py-16">
-      <Badge className="bg-orange-100 text-orange-700 mb-4">New: Natural Language Editing</Badge>
+      <Badge className="bg-orange-100 text-orange-700 mb-4">New: AI-Powered Editing</Badge>
       <h1 className="text-5xl font-bold text-gray-900 mb-4">
         Your Motion Graphics
       </h1>
@@ -97,7 +97,7 @@ const ExploreTab = ({ onOpenEditor }) => (
         Template Library
       </h2>
       <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Browse and customize professional templates for YouTube, TikTok, and Instagram in minutes. No design experience required.
+        Create and edit professional motion graphics with AI. Just describe what you want - change colors, replace text, modify animations instantly.
       </p>
       
       <div className="flex justify-center space-x-4 mb-16">
@@ -132,16 +132,93 @@ const ExploreTab = ({ onOpenEditor }) => (
         <p className="text-gray-600">Avg. Edit Time</p>
       </div>
     </div>
-    
-    <div className="text-center">
-      <h3 className="text-2xl font-bold text-gray-900 mb-4">Featured Templates</h3>
-      <p className="text-gray-600 mb-8">Handpicked templates to get you started</p>
-      <Button variant="outline" className="px-6 py-2 rounded-lg">
-        View All Templates →
-      </Button>
-    </div>
   </div>
 );
+
+const LibraryTab = ({ animations, onOpenEditor, onDeleteAnimation }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredAnimations = animations.filter(anim => 
+    anim.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Template Library</h2>
+        <p className="text-gray-600 mb-4">Browse and edit motion graphics templates (original templates preserved)</p>
+        
+        <div className="flex space-x-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Input
+              placeholder="Search templates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+            Search
+          </Button>
+        </div>
+      </div>
+      
+      {filteredAnimations.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen className="w-8 h-8 text-blue-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No templates found</h3>
+          <p className="text-gray-600 mb-6">Upload Lottie templates to get started</p>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+            Upload Templates
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredAnimations.map((animation) => (
+            <Card key={animation.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                  {animation.animationData ? (
+                    <Lottie 
+                      animationData={animation.animationData} 
+                      loop={true}
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                      <Play className="w-12 h-12 text-orange-500" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1 truncate">{animation.name}</h3>
+                <p className="text-sm text-gray-600 mb-3">Template</p>
+                <div className="flex space-x-2">
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => onOpenEditor(animation)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => onDeleteAnimation(animation.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MyProjectsTab = ({ projects, onOpenProject, onDeleteProject }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -227,89 +304,6 @@ const MyProjectsTab = ({ projects, onOpenProject, onDeleteProject }) => {
     </div>
   );
 };
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const filteredAnimations = animations.filter(anim => 
-    anim.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Template Library</h2>
-        <p className="text-gray-600 mb-4">Browse and edit motion graphics templates</p>
-        
-        <div className="flex space-x-4">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-            <Input
-              placeholder="Search templates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Search
-          </Button>
-        </div>
-      </div>
-      
-      {filteredAnimations.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-8 h-8 text-blue-500" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No templates found</h3>
-          <p className="text-gray-600 mb-6">Try adjusting your search or category filter</p>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Upload Templates
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAnimations.map((animation) => (
-            <Card key={animation.id} className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardContent className="p-4">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                  {animation.animationData ? (
-                    <Lottie 
-                      animationData={animation.animationData} 
-                      loop={true}
-                      style={{ width: '100%', height: '100%' }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
-                      <Play className="w-12 h-12 text-orange-500" />
-                    </div>
-                  )}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-1 truncate">{animation.name}</h3>
-                <p className="text-sm text-gray-600 mb-3">Motion Template</p>
-                <div className="flex space-x-2">
-                  <Button 
-                    size="sm" 
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => onOpenEditor(animation)}
-                  >
-                    Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => onDeleteAnimation(animation.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const UploadTab = ({ onUploadAnimation }) => {
   const [url, setUrl] = useState('');
@@ -332,13 +326,13 @@ const UploadTab = ({ onUploadAnimation }) => {
       if (!response.ok) throw new Error('Failed to fetch animation');
       
       const animationData = await response.json();
-      const name = `Animation ${Date.now()}`;
+      const name = `Template ${Date.now()}`;
       
       await onUploadAnimation({ url, name, animationData });
       
       toast({
         title: "Success",
-        description: "Animation uploaded successfully!"
+        description: "Template uploaded successfully!"
       });
       setUrl('');
     } catch (error) {
@@ -355,8 +349,8 @@ const UploadTab = ({ onUploadAnimation }) => {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Animation</h2>
-        <p className="text-gray-600">Import Lottie files via URL to add to your library</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Template</h2>
+        <p className="text-gray-600">Import Lottie files via URL to add to your template library</p>
       </div>
       
       <Card>
@@ -373,7 +367,7 @@ const UploadTab = ({ onUploadAnimation }) => {
                 className="w-full"
               />
               <p className="text-sm text-gray-500 mt-1">
-                Example: https://lottie.host/04d4df15-8ce7-44cd-ba10-26887e7da660/yxw7R5qwgE.json
+                Paste a Lottie JSON URL to create a template
               </p>
             </div>
             
@@ -382,28 +376,39 @@ const UploadTab = ({ onUploadAnimation }) => {
               disabled={isLoading}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white"
             >
-              {isLoading ? 'Uploading...' : 'Upload Animation'}
+              {isLoading ? 'Uploading...' : 'Upload Template'}
             </Button>
           </div>
         </CardContent>
       </Card>
       
       <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-semibold text-blue-900 mb-2">Quick Upload</h3>
-        <p className="text-sm text-blue-700 mb-3">Try this sample animation:</p>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setUrl('https://lottie.host/04d4df15-8ce7-44cd-ba10-26887e7da660/yxw7R5qwgE.json')}
-        >
-          Use Sample URL
-        </Button>
+        <h3 className="font-semibold text-blue-900 mb-2">Sample Templates</h3>
+        <p className="text-sm text-blue-700 mb-3">Try these sample animations:</p>
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setUrl('https://lottie.host/04d4df15-8ce7-44cd-ba10-26887e7da660/yxw7R5qwgE.json')}
+            className="w-full text-left"
+          >
+            Green Clover Animation
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setUrl('https://lottie.host/40c82ba8-6b3d-4e56-a959-61eb10c21375/0LhZiiaGbT.json')}
+            className="w-full text-left"
+          >
+            Chart Animation
+          </Button>
+        </div>
       </div>
     </div>
   );
 };
 
-const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
+const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [speed, setSpeed] = useState([1]);
   const [size, setSize] = useState([100]);
@@ -412,9 +417,8 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
   const [prompt, setPrompt] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnimationData, setCurrentAnimationData] = useState(animation.animationData);
-  const [originalAnimationData, setOriginalAnimationData] = useState(animation.originalData || animation.animationData);
+  const [originalAnimationData] = useState(animation.originalData || animation.animationData);
   const [animationKey, setAnimationKey] = useState(0);
-  const [lottieRef, setLottieRef] = useState(null);
   const { toast } = useToast();
 
   // Reset animation to original
@@ -427,8 +431,8 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     setRotation([0]);
     setOpacity([100]);
     toast({
-      title: "✅ Reset",
-      description: "Animation reset to original"
+      title: "✅ Reset Complete",
+      description: "Animation reset to original template"
     });
   };
 
@@ -437,10 +441,11 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     setSpeed(newSpeed);
     console.log('🔥 SPEED CHANGE:', newSpeed[0]);
     
-    // Create new animation data with modified frame rate
     if (currentAnimationData) {
       const modifiedData = { ...currentAnimationData };
-      modifiedData.fr = (modifiedData.fr || 24) * newSpeed[0]; // Modify frame rate
+      // Modify frame rate for speed
+      const originalFr = originalAnimationData.fr || 24;
+      modifiedData.fr = originalFr * newSpeed[0];
       setCurrentAnimationData(modifiedData);
       setAnimationKey(prev => prev + 1);
     }
@@ -453,33 +458,15 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     
     if (currentAnimationData) {
       const scaleMultiplier = newSize[0] / 100;
-      const modifiedData = JSON.parse(JSON.stringify(currentAnimationData)); // Deep copy
+      const modifiedData = JSON.parse(JSON.stringify(currentAnimationData));
       
-      // Scale the entire animation
-      if (modifiedData.w) modifiedData.w *= scaleMultiplier;
-      if (modifiedData.h) modifiedData.h *= scaleMultiplier;
-      
-      // Scale all layers
-      if (modifiedData.layers) {
-        modifiedData.layers.forEach(layer => {
-          if (layer.ks && layer.ks.s && layer.ks.s.k) {
-            if (Array.isArray(layer.ks.s.k)) {
-              layer.ks.s.k[0] *= scaleMultiplier;
-              layer.ks.s.k[1] *= scaleMultiplier;
-            }
-          }
-        });
-      }
+      // Scale dimensions
+      if (modifiedData.w) modifiedData.w = Math.round((originalAnimationData.w || 400) * scaleMultiplier);
+      if (modifiedData.h) modifiedData.h = Math.round((originalAnimationData.h || 400) * scaleMultiplier);
       
       setCurrentAnimationData(modifiedData);
       setAnimationKey(prev => prev + 1);
     }
-  };
-
-  // Handle play/pause
-  const handlePlayPause = () => {
-    const newPlaying = !isPlaying;
-    setIsPlaying(newPlaying);
   };
 
   const handleSaveAsProject = async () => {
@@ -515,7 +502,6 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
       
       if (response.data.success) {
         if (format === 'json') {
-          // Download JSON file
           const blob = new Blob([JSON.stringify(response.data.data, null, 2)], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -533,7 +519,7 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     } catch (error) {
       toast({
         title: "❌ Export Failed",
-        description: "Failed to export animation",
+        description: "Export failed. Please try again.",
         variant: "destructive"
       });
     }
@@ -544,10 +530,7 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     
     setIsProcessing(true);
     try {
-      console.log('🔥 SENDING AI REQUEST:', {
-        prompt,
-        currentData: currentAnimationData
-      });
+      console.log('🔥 AI REQUEST:', { prompt, hasData: !!currentAnimationData });
       
       const response = await axios.post(`${API}/animations/edit`, {
         animationData: currentAnimationData,
@@ -555,29 +538,18 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
         animationId: animation.id
       });
       
-      console.log('🔥 AI RESPONSE RECEIVED:', response.data);
+      console.log('🔥 AI RESPONSE:', response.data.success);
       
       if (response.data.success && response.data.animationData) {
-        console.log('🔥 UPDATING ANIMATION DATA');
-        console.log('Old data:', JSON.stringify(currentAnimationData).substring(0, 200));
-        console.log('New data:', JSON.stringify(response.data.animationData).substring(0, 200));
-        
-        // FORCE UPDATE
         setCurrentAnimationData(response.data.animationData);
         setAnimationKey(prev => prev + 1);
         
-        // Force a complete re-render after a small delay
-        setTimeout(() => {
-          setAnimationKey(prev => prev + 1);
-        }, 100);
-        
         toast({
           title: "✅ AI Success",
-          description: `Command "${prompt}" applied successfully!`
+          description: `"${prompt}" applied successfully!`
         });
         setPrompt('');
       } else {
-        console.log('🔥 AI RESPONSE NOT SUCCESSFUL:', response.data);
         toast({
           title: "⚠️ No Changes",
           description: "AI processed but no changes detected",
@@ -588,97 +560,13 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     } catch (error) {
       console.error('🔥 AI ERROR:', error);
       toast({
-        title: "❌ Error",
-        description: `Failed: ${error.message}`,
+        title: "❌ AI Error",
+        description: "AI request failed. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
     }
-  };
-    if (!prompt.trim()) return;
-    
-    setIsProcessing(true);
-    try {
-      console.log('🔥 SENDING AI REQUEST:', {
-        prompt,
-        currentData: currentAnimationData
-      });
-      
-      const response = await axios.post(`${API}/animations/edit`, {
-        animationData: currentAnimationData,
-        prompt: prompt,
-        animationId: animation.id
-      });
-      
-      console.log('🔥 AI RESPONSE RECEIVED:', response.data);
-      
-      if (response.data.success && response.data.animationData) {
-        console.log('🔥 UPDATING ANIMATION DATA');
-        console.log('Old data:', JSON.stringify(currentAnimationData).substring(0, 200));
-        console.log('New data:', JSON.stringify(response.data.animationData).substring(0, 200));
-        
-        // FORCE UPDATE
-        setCurrentAnimationData(response.data.animationData);
-        setAnimationKey(prev => prev + 1);
-        
-        // Force a complete re-render after a small delay
-        setTimeout(() => {
-          setAnimationKey(prev => prev + 1);
-        }, 100);
-        
-        toast({
-          title: "✅ AI Success",
-          description: `Command "${prompt}" applied successfully!`
-        });
-        setPrompt('');
-      } else {
-        console.log('🔥 AI RESPONSE NOT SUCCESSFUL:', response.data);
-        toast({
-          title: "⚠️ No Changes",
-          description: "AI processed but no changes detected",
-          variant: "default"
-        });
-        setPrompt('');
-      }
-    } catch (error) {
-      console.error('🔥 AI ERROR:', error);
-      toast({
-        title: "❌ Error",
-        description: `Failed: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      await onSave({
-        ...animation,
-        animationData: currentAnimationData,
-        settings: { speed: speed[0], size: size[0], rotation: rotation[0], opacity: opacity[0] }
-      });
-      toast({
-        title: "Success",
-        description: "Project saved successfully!"
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save project.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleExport = async (format) => {
-    toast({
-      title: "Export Started",
-      description: `Exporting animation as ${format.toUpperCase()}...`
-    });
-    // Export functionality will be implemented here
   };
 
   return (
@@ -690,15 +578,18 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
             ← Back
           </Button>
           <h1 className="text-lg font-semibold">{animation.name}</h1>
+          <Badge variant="outline">{isProject ? 'Project' : 'Template'}</Badge>
         </div>
         
         <div className="flex items-center space-x-2">
           <Button onClick={handleReset} variant="outline" className="bg-gray-500 hover:bg-gray-600 text-white">
             Reset
           </Button>
-          <Button onClick={handleSaveAsProject} className="bg-green-500 hover:bg-green-600 text-white">
-            Save as Project
-          </Button>
+          {!isProject && (
+            <Button onClick={handleSaveAsProject} className="bg-green-500 hover:bg-green-600 text-white">
+              Save as Project
+            </Button>
+          )}
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-blue-500 hover:bg-blue-600 text-white">
@@ -722,9 +613,6 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
               </div>
             </DialogContent>
           </Dialog>
-          <Button variant="ghost">
-            <Settings className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
@@ -736,7 +624,7 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handlePlayPause}
+              onClick={() => setIsPlaying(!isPlaying)}
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </Button>
@@ -767,46 +655,25 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
                   animationData={currentAnimationData}
                   loop={true}
                   autoplay={isPlaying}
-                  style={{ width: 400, height: 400 }}
-                  lottieRef={(instance) => {
-                    console.log('🔥 LOTTIE REF SET:', instance);
-                    if (instance) {
-                      setLottieRef(instance);
-                      console.log('🔥 LOTTIE METHODS:', Object.keys(instance));
-                      
-                      // Try to set initial speed
-                      setTimeout(() => {
-                        if (speed[0] !== 1) {
-                          try {
-                            if (typeof instance.setSpeed === 'function') {
-                              instance.setSpeed(speed[0]);
-                            } else if (instance.setPlaybackRate) {
-                              instance.setPlaybackRate(speed[0]);
-                            }
-                          } catch (e) {
-                            console.error('🔥 INITIAL SPEED ERROR:', e);
-                          }
-                        }
-                      }, 100);
-                    }
-                  }}
+                  style={{ width: currentAnimationData.w || 400, height: currentAnimationData.h || 400 }}
                 />
               )}
             </div>
           </div>
 
           {/* AI Prompt Box */}
-          <div className="h-32 border-t border-gray-200 p-4">
+          <div className="h-32 border-t border-gray-200 p-4 bg-gradient-to-r from-orange-50 to-red-50">
             <div className="flex items-center space-x-2 mb-2">
               <Sparkles className="w-5 h-5 text-orange-500" />
               <h3 className="font-semibold text-gray-900">AI Editor</h3>
+              <Badge className="bg-orange-100 text-orange-700">✨ Powered by Gemini AI</Badge>
             </div>
             <div className="flex space-x-2">
               <Textarea
-                placeholder="Try specific commands like: 'change green color to blue', 'replace 2019 with 2024', 'make the animation 50% bigger', 'change the text to Hello World'"
+                placeholder="Try: 'change color to blue', 'delete BET', 'replace 2020 with 2024', 'make text bigger', 'change graph color to green'"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                className="flex-1 resize-none"
+                className="flex-1 resize-none bg-white"
                 rows={2}
               />
               <Button
@@ -834,11 +701,11 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
                 </div>
                 <div>
                   <label className="text-sm text-gray-600">Width</label>
-                  <input type="number" value="298" className="w-full px-2 py-1 border rounded text-sm" />
+                  <input type="number" value={currentAnimationData?.w || 400} readOnly className="w-full px-2 py-1 border rounded text-sm bg-gray-50" />
                 </div>
                 <div>
                   <label className="text-sm text-gray-600">Height</label>
-                  <input type="number" value="304" className="w-full px-2 py-1 border rounded text-sm" />
+                  <input type="number" value={currentAnimationData?.h || 400} readOnly className="w-full px-2 py-1 border rounded text-sm bg-gray-50" />
                 </div>
               </div>
             </div>
@@ -859,12 +726,12 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
                   <div className="text-right text-xs text-gray-500">{speed[0]}x</div>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600 mb-2 block">Size</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Size Scale</label>
                   <Slider
                     value={size}
                     onValueChange={handleSizeChange}
-                    max={200}
-                    min={10}
+                    max={300}
+                    min={25}
                     step={5}
                     className="mb-1"
                   />
@@ -900,12 +767,11 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Template Info</label>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>ID: {animation.id.substring(0, 8)}...</p>
-                <p>Category: Motion Graphics</p>
-                <p>Tags: imported, lottie</p>
-                <p>Dimensions: 298×304</p>
-                <p>Frame Rate: 24fps</p>
-                <p>Layers: 4</p>
+                <p>ID: {animation.id?.substring(0, 8)}...</p>
+                <p>Type: {isProject ? 'Project' : 'Template'}</p>
+                <p>Dimensions: {currentAnimationData?.w || 400}×{currentAnimationData?.h || 400}</p>
+                <p>Frame Rate: {Math.round(currentAnimationData?.fr || 24)}fps</p>
+                <p>Layers: {currentAnimationData?.layers?.length || 0}</p>
               </div>
             </div>
           </div>
@@ -918,20 +784,26 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
 function App() {
   const [activeTab, setActiveTab] = useState('explore');
   const [animations, setAnimations] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [selectedAnimation, setSelectedAnimation] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(false);
 
-  // Load animations from API
+  // Load animations and projects
   useEffect(() => {
-    const loadAnimations = async () => {
+    const loadData = async () => {
       try {
-        const response = await axios.get(`${API}/animations`);
-        setAnimations(response.data);
+        const [animationsRes, projectsRes] = await Promise.all([
+          axios.get(`${API}/animations`),
+          axios.get(`${API}/projects`).catch(() => ({ data: [] }))
+        ]);
+        setAnimations(animationsRes.data);
+        setProjects(projectsRes.data);
       } catch (error) {
-        console.error('Failed to load animations:', error);
+        console.error('Failed to load data:', error);
       }
     };
-    loadAnimations();
+    loadData();
   }, []);
 
   const handleUploadAnimation = async (animationData) => {
@@ -954,48 +826,66 @@ function App() {
     }
   };
 
-  const handleOpenEditor = (animation) => {
-    setSelectedAnimation(animation);
-    setIsEditorOpen(true);
-  };
-
-  const handleCloseEditor = () => {
-    setIsEditorOpen(false);
-    setSelectedAnimation(null);
-  };
-
-  const handleSaveProject = async (updatedAnimation) => {
+  const handleSaveAsProject = async (projectData) => {
     try {
-      await axios.put(`${API}/animations/${updatedAnimation.id}`, updatedAnimation);
-      setAnimations(prev => prev.map(a => a.id === updatedAnimation.id ? updatedAnimation : a));
+      const response = await axios.post(`${API}/projects`, projectData);
+      setProjects(prev => [...prev, response.data]);
+      setActiveTab('projects');
     } catch (error) {
       console.error('Failed to save project:', error);
       throw error;
     }
   };
 
+  const handleDeleteProject = async (id) => {
+    try {
+      await axios.delete(`${API}/projects/${id}`);
+      setProjects(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+    }
+  };
+
+  const handleOpenEditor = (animation, isProject = false) => {
+    setSelectedAnimation(animation);
+    setEditingProject(isProject);
+    setIsEditorOpen(true);
+  };
+
+  const handleCloseEditor = () => {
+    setIsEditorOpen(false);
+    setSelectedAnimation(null);
+    setEditingProject(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'explore':
-        return <ExploreTab onOpenEditor={handleOpenEditor} />;
+        return <ExploreTab />;
       case 'library':
         return (
           <LibraryTab
             animations={animations}
-            onOpenEditor={handleOpenEditor}
+            onOpenEditor={(anim) => handleOpenEditor(anim, false)}
             onDeleteAnimation={handleDeleteAnimation}
           />
         );
       case 'upload':
         return <UploadTab onUploadAnimation={handleUploadAnimation} />;
       case 'projects':
-        return <div className="text-center py-16 text-gray-500">My Projects - Coming Soon</div>;
+        return (
+          <MyProjectsTab
+            projects={projects}
+            onOpenProject={(proj) => handleOpenEditor(proj, true)}
+            onDeleteProject={handleDeleteProject}
+          />
+        );
       case 'exports':
         return <div className="text-center py-16 text-gray-500">Exports - Coming Soon</div>;
       case 'brand':
         return <div className="text-center py-16 text-gray-500">Brand Kits - Coming Soon</div>;
       default:
-        return <ExploreTab onOpenEditor={handleOpenEditor} />;
+        return <ExploreTab />;
     }
   };
 
@@ -1004,7 +894,8 @@ function App() {
       <Editor
         animation={selectedAnimation}
         onClose={handleCloseEditor}
-        onSave={handleSaveProject}
+        onSaveAsProject={handleSaveAsProject}
+        isProject={editingProject}
       />
     );
   }
