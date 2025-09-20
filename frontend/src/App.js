@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from './components/ui/button';
 import { Card, CardContent } from './components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Input } from './components/ui/input';
 import { Slider } from './components/ui/slider';
 import { Badge } from './components/ui/badge';
@@ -21,12 +20,11 @@ import {
   User,
   Play,
   Pause,
-  RotateCcw,
   Download,
   Settings,
   Sparkles,
-  Plus,
-  Globe
+  Globe,
+  RotateCw
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -90,14 +88,10 @@ const ExploreTab = () => (
   <div className="max-w-4xl mx-auto">
     <div className="text-center py-16">
       <Badge className="bg-orange-100 text-orange-700 mb-4">New: AI-Powered Editing</Badge>
-      <h1 className="text-5xl font-bold text-gray-900 mb-4">
-        Your Motion Graphics
-      </h1>
-      <h2 className="text-5xl font-bold text-orange-500 mb-6">
-        Template Library
-      </h2>
+      <h1 className="text-5xl font-bold text-gray-900 mb-4">Your Motion Graphics</h1>
+      <h2 className="text-5xl font-bold text-orange-500 mb-6">Template Library</h2>
       <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Create and edit professional motion graphics with AI. Just describe what you want - change colors, replace text, modify animations instantly.
+        Create and edit professional motion graphics with AI. Change colors, replace text, modify animations instantly with natural language.
       </p>
       
       <div className="flex justify-center space-x-4 mb-16">
@@ -146,7 +140,7 @@ const LibraryTab = ({ animations, onOpenEditor, onDeleteAnimation }) => {
     <div>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Template Library</h2>
-        <p className="text-gray-600 mb-4">Browse and edit motion graphics templates (original templates preserved)</p>
+        <p className="text-gray-600 mb-4">Browse and edit motion graphics templates</p>
         
         <div className="flex space-x-4">
           <div className="relative flex-1">
@@ -158,9 +152,7 @@ const LibraryTab = ({ animations, onOpenEditor, onDeleteAnimation }) => {
               className="pl-10"
             />
           </div>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Search
-          </Button>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">Search</Button>
         </div>
       </div>
       
@@ -171,9 +163,7 @@ const LibraryTab = ({ animations, onOpenEditor, onDeleteAnimation }) => {
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No templates found</h3>
           <p className="text-gray-600 mb-6">Upload Lottie templates to get started</p>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Upload Templates
-          </Button>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">Upload Templates</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -243,9 +233,7 @@ const MyProjectsTab = ({ projects, onOpenProject, onDeleteProject }) => {
               className="pl-10"
             />
           </div>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Search
-          </Button>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">Search</Button>
         </div>
       </div>
       
@@ -256,9 +244,7 @@ const MyProjectsTab = ({ projects, onOpenProject, onDeleteProject }) => {
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h3>
           <p className="text-gray-600 mb-6">Create your first project by editing a template</p>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-            Browse Templates
-          </Button>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">Browse Templates</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -366,9 +352,6 @@ const UploadTab = ({ onUploadAnimation }) => {
                 onChange={(e) => setUrl(e.target.value)}
                 className="w-full"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                Paste a Lottie JSON URL to create a template
-              </p>
             </div>
             
             <Button 
@@ -417,55 +400,45 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
   const [prompt, setPrompt] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnimationData, setCurrentAnimationData] = useState(animation.animationData);
-  const [originalAnimationData] = useState(animation.originalData || animation.animationData);
+  const [originalAnimationData] = useState(JSON.parse(JSON.stringify(animation.animationData)));
   const [animationKey, setAnimationKey] = useState(0);
+  const [lottieRef, setLottieRef] = useState(null);
   const { toast } = useToast();
 
   // Reset animation to original
   const handleReset = () => {
-    console.log('🔥 RESETTING ANIMATION');
-    setCurrentAnimationData(originalAnimationData);
+    console.log('🔄 RESETTING TO ORIGINAL');
+    setCurrentAnimationData(JSON.parse(JSON.stringify(originalAnimationData)));
     setAnimationKey(prev => prev + 1);
     setSpeed([1]);
     setSize([100]);
     setRotation([0]);
     setOpacity([100]);
+    setPrompt('');
     toast({
       title: "✅ Reset Complete",
       description: "Animation reset to original template"
     });
   };
 
-  // Handle speed changes - FIXED
+  // Handle speed changes - affects playback
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
-    console.log('🔥 SPEED CHANGE:', newSpeed[0]);
-    
-    if (currentAnimationData) {
-      const modifiedData = { ...currentAnimationData };
-      // Modify frame rate for speed
-      const originalFr = originalAnimationData.fr || 24;
-      modifiedData.fr = originalFr * newSpeed[0];
-      setCurrentAnimationData(modifiedData);
-      setAnimationKey(prev => prev + 1);
+    if (lottieRef && lottieRef.setSpeed) {
+      lottieRef.setSpeed(newSpeed[0]);
     }
   };
 
-  // Handle size changes - FIXED
-  const handleSizeChange = (newSize) => {
-    setSize(newSize);
-    console.log('🔥 SIZE CHANGE:', newSize[0]);
-    
-    if (currentAnimationData) {
-      const scaleMultiplier = newSize[0] / 100;
-      const modifiedData = JSON.parse(JSON.stringify(currentAnimationData));
-      
-      // Scale dimensions
-      if (modifiedData.w) modifiedData.w = Math.round((originalAnimationData.w || 400) * scaleMultiplier);
-      if (modifiedData.h) modifiedData.h = Math.round((originalAnimationData.h || 400) * scaleMultiplier);
-      
-      setCurrentAnimationData(modifiedData);
-      setAnimationKey(prev => prev + 1);
+  // Handle play/pause
+  const handlePlayPause = () => {
+    const newPlaying = !isPlaying;
+    setIsPlaying(newPlaying);
+    if (lottieRef) {
+      if (newPlaying) {
+        lottieRef.play();
+      } else {
+        lottieRef.pause();
+      }
     }
   };
 
@@ -529,18 +502,19 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
+    console.log('🚀 SENDING AI REQUEST:', prompt);
+    
     try {
-      console.log('🔥 AI REQUEST:', { prompt, hasData: !!currentAnimationData });
-      
       const response = await axios.post(`${API}/animations/edit`, {
         animationData: currentAnimationData,
-        prompt: prompt,
+        prompt: prompt.trim(),
         animationId: animation.id
       });
       
-      console.log('🔥 AI RESPONSE:', response.data.success);
+      console.log('🎯 AI RESPONSE:', response.data);
       
       if (response.data.success && response.data.animationData) {
+        console.log('✅ APPLYING AI CHANGES');
         setCurrentAnimationData(response.data.animationData);
         setAnimationKey(prev => prev + 1);
         
@@ -550,18 +524,18 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
         });
         setPrompt('');
       } else {
+        console.log('⚠️ NO CHANGES DETECTED');
         toast({
           title: "⚠️ No Changes",
-          description: "AI processed but no changes detected",
+          description: "AI processed but couldn't make changes. Try a different command.",
           variant: "default"
         });
-        setPrompt('');
       }
     } catch (error) {
-      console.error('🔥 AI ERROR:', error);
+      console.error('❌ AI ERROR:', error);
       toast({
         title: "❌ AI Error",
-        description: "AI request failed. Please try again.",
+        description: `Failed to process: ${error.response?.data?.detail || error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -574,15 +548,14 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
       {/* Header */}
       <div className="h-16 border-b border-gray-200 flex items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={onClose}>
-            ← Back
-          </Button>
+          <Button variant="ghost" onClick={onClose}>← Back</Button>
           <h1 className="text-lg font-semibold">{animation.name}</h1>
           <Badge variant="outline">{isProject ? 'Project' : 'Template'}</Badge>
         </div>
         
         <div className="flex items-center space-x-2">
           <Button onClick={handleReset} variant="outline" className="bg-gray-500 hover:bg-gray-600 text-white">
+            <RotateCw className="w-4 h-4 mr-2" />
             Reset
           </Button>
           {!isProject && (
@@ -592,24 +565,16 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
           )}
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-                Export
-              </Button>
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white">Export</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Export Animation</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
-                <Button onClick={() => handleExport('mp4')} className="w-full">
-                  Export as MP4
-                </Button>
-                <Button onClick={() => handleExport('gif')} className="w-full">
-                  Export as GIF
-                </Button>
-                <Button onClick={() => handleExport('json')} className="w-full">
-                  Export as JSON
-                </Button>
+                <Button onClick={() => handleExport('mp4')} className="w-full">Export as MP4</Button>
+                <Button onClick={() => handleExport('gif')} className="w-full">Export as GIF</Button>
+                <Button onClick={() => handleExport('json')} className="w-full">Export as JSON</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -621,11 +586,7 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
         <div className="flex-1 flex flex-col">
           {/* Playback Controls */}
           <div className="h-16 border-b border-gray-200 flex items-center justify-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsPlaying(!isPlaying)}
-            >
+            <Button variant="ghost" size="sm" onClick={handlePlayPause}>
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </Button>
             <span className="text-sm text-gray-600">Speed: {speed[0]}x</span>
@@ -640,48 +601,52 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
             </div>
           </div>
 
-          {/* Animation Preview */}
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <div 
-              className="bg-white rounded-lg shadow-lg overflow-hidden"
-              style={{
-                transform: `rotate(${rotation[0]}deg)`,
-                opacity: opacity[0] / 100
-              }}
-            >
+          {/* Animation Preview - FIXED SIZE CONTAINER */}
+          <div className="flex-1 flex items-center justify-center bg-gray-50 p-8">
+            <div className="w-96 h-96 bg-white rounded-lg shadow-lg flex items-center justify-center overflow-hidden">
               {currentAnimationData && (
-                <Lottie
-                  key={animationKey}
-                  animationData={currentAnimationData}
-                  loop={true}
-                  autoplay={isPlaying}
-                  style={{ width: currentAnimationData.w || 400, height: currentAnimationData.h || 400 }}
-                />
+                <div 
+                  style={{
+                    transform: `scale(${size[0] / 100}) rotate(${rotation[0]}deg)`,
+                    opacity: opacity[0] / 100,
+                    maxWidth: '100%',
+                    maxHeight: '100%'
+                  }}
+                >
+                  <Lottie
+                    key={animationKey}
+                    animationData={currentAnimationData}
+                    loop={true}
+                    autoplay={isPlaying}
+                    style={{ width: 350, height: 350 }}
+                    lottieRef={setLottieRef}
+                  />
+                </div>
               )}
             </div>
           </div>
 
           {/* AI Prompt Box */}
-          <div className="h-32 border-t border-gray-200 p-4 bg-gradient-to-r from-orange-50 to-red-50">
-            <div className="flex items-center space-x-2 mb-2">
+          <div className="h-40 border-t border-gray-200 p-6 bg-gradient-to-r from-orange-50 to-red-50">
+            <div className="flex items-center space-x-2 mb-3">
               <Sparkles className="w-5 h-5 text-orange-500" />
               <h3 className="font-semibold text-gray-900">AI Editor</h3>
-              <Badge className="bg-orange-100 text-orange-700">✨ Powered by Gemini AI</Badge>
+              <Badge className="bg-orange-100 text-orange-700">✨ Powered by Gemini</Badge>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               <Textarea
-                placeholder="Try: 'change color to blue', 'delete BET', 'replace 2020 with 2024', 'make text bigger', 'change graph color to green'"
+                placeholder="Try: 'delete Longs', 'change green clover to blue', 'replace Longs with Hello', 'make text bigger', 'change clover color to red'"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className="flex-1 resize-none bg-white"
-                rows={2}
+                rows={3}
               />
               <Button
                 onClick={handlePromptSubmit}
                 disabled={isProcessing || !prompt.trim()}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 self-start"
               >
-                {isProcessing ? 'Processing...' : 'Apply'}
+                {isProcessing ? 'Processing...' : 'Apply AI'}
               </Button>
             </div>
           </div>
@@ -700,12 +665,10 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
                   <input type="color" className="w-full h-8 rounded border" />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Width</label>
-                  <input type="number" value={currentAnimationData?.w || 400} readOnly className="w-full px-2 py-1 border rounded text-sm bg-gray-50" />
+                  <label className="text-sm text-gray-600">Width: 350px</label>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Height</label>
-                  <input type="number" value={currentAnimationData?.h || 400} readOnly className="w-full px-2 py-1 border rounded text-sm bg-gray-50" />
+                  <label className="text-sm text-gray-600">Height: 350px</label>
                 </div>
               </div>
             </div>
@@ -729,8 +692,8 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
                   <label className="text-sm text-gray-600 mb-2 block">Size Scale</label>
                   <Slider
                     value={size}
-                    onValueChange={handleSizeChange}
-                    max={300}
+                    onValueChange={setSize}
+                    max={150}
                     min={25}
                     step={5}
                     className="mb-1"
@@ -769,7 +732,6 @@ const Editor = ({ animation, onClose, onSaveAsProject, isProject = false }) => {
               <div className="text-sm text-gray-600 space-y-1">
                 <p>ID: {animation.id?.substring(0, 8)}...</p>
                 <p>Type: {isProject ? 'Project' : 'Template'}</p>
-                <p>Dimensions: {currentAnimationData?.w || 400}×{currentAnimationData?.h || 400}</p>
                 <p>Frame Rate: {Math.round(currentAnimationData?.fr || 24)}fps</p>
                 <p>Layers: {currentAnimationData?.layers?.length || 0}</p>
               </div>
