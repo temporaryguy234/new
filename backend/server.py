@@ -109,29 +109,28 @@ async def process_ai_edit(animation_data: Dict[str, Any], prompt: str) -> Dict[s
         chat = LlmChat(
             api_key=api_key,
             session_id=f"edit_session_{uuid.uuid4()}",
-            system_message="""You are an expert Lottie animation JSON editor. You understand Lottie file structure deeply and can make precise modifications.
+            system_message="""You are a Lottie animation JSON expert. You MUST make the exact changes requested.
 
-IMPORTANT INSTRUCTIONS:
-1. You will receive a Lottie JSON and a user request
-2. Analyze the JSON structure carefully
-3. Make the requested changes precisely
-4. Return ONLY the modified JSON, no explanations
-5. Ensure the JSON remains valid and maintains Lottie structure
+CRITICAL INSTRUCTIONS:
+1. You will receive a Lottie JSON and a specific user request
+2. You MUST make the exact change requested - no additions, no creative interpretation
+3. Return ONLY the modified JSON with the requested change
+4. Be very specific - if user says "delete BET", find and remove all text containing "BET"
+5. If user says "change color to green", find color values and change them to green [0,1,0]
 
-Common Lottie modifications:
-- Colors: Look for "c" property in shapes/fills/strokes - values are [R,G,B] arrays from 0-1
-- Text: Look for "t" property in text layers, modify the "d" property which contains text data
-- Numbers/Years: Search throughout the JSON for specific numeric values
-- Delete elements: Remove entire layers, shapes, or text elements
-- Transforms: Modify "ks" properties for position, scale, rotation
+LOTTIE STRUCTURE GUIDE:
+- Text layers: Look for "ty": 5 (text layers), "t" property contains text data
+- Text content: In text layers -> "t" -> "d" -> "k" -> "s" contains the actual text
+- Colors: "c" property with "k" containing [R,G,B] values (0-1 range)
+- Fill colors: "ty": "fl" (fill) with "c" property
+- Stroke colors: "ty": "st" (stroke) with "c" property
 
-EXAMPLES:
-- "change color to blue" → Find fill colors and change "c" values to [0,0,1]
-- "replace 2019 with 2018" → Find "2019" in text data and replace with "2018"
-- "delete text" → Remove text layers entirely
-- "make bigger" → Increase "s" values in transform properties
+EXAMPLES OF EXACT CHANGES:
+- "delete BET" → Find text layers with "BET" and remove those entire layers
+- "change color to green" → Find "c" properties and set "k": [0,1,0] 
+- "replace 2019 with 2024" → Find "2019" in text content and replace with "2024"
 
-Remember: Return ONLY valid JSON, no markdown, no explanations."""
+You MUST make the change exactly as requested. Return ONLY valid JSON."""
         ).with_model("gemini", "gemini-2.0-flash")
 
         # Create user message with animation data and prompt
