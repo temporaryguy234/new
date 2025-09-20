@@ -320,7 +320,7 @@ const UploadTab = ({ onUploadAnimation }) => {
   );
 };
 
-const Editor = ({ animation, onClose, onSave }) => {
+const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [speed, setSpeed] = useState([1]);
   const [size, setSize] = useState([100]);
@@ -329,29 +329,67 @@ const Editor = ({ animation, onClose, onSave }) => {
   const [prompt, setPrompt] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnimationData, setCurrentAnimationData] = useState(animation.animationData);
-  const [animationKey, setAnimationKey] = useState(0); // Force re-render of Lottie
-  const [lottieRef, setLottieRef] = useState(null); // Reference to Lottie instance
+  const [originalAnimationData, setOriginalAnimationData] = useState(animation.originalData || animation.animationData);
+  const [animationKey, setAnimationKey] = useState(0);
+  const [lottieRef, setLottieRef] = useState(null);
   const { toast } = useToast();
 
-  // Handle speed changes
+  // Reset animation to original
+  const handleReset = () => {
+    console.log('🔥 RESETTING ANIMATION');
+    setCurrentAnimationData(originalAnimationData);
+    setAnimationKey(prev => prev + 1);
+    setSpeed([1]);
+    setSize([100]);
+    setRotation([0]);
+    setOpacity([100]);
+    toast({
+      title: "✅ Reset",
+      description: "Animation reset to original"
+    });
+  };
+
+  // Handle speed changes - FIXED
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
-    console.log('🔥 SPEED CHANGE:', newSpeed[0], 'lottieRef:', lottieRef);
+    console.log('🔥 SPEED CHANGE:', newSpeed[0]);
     
-    if (lottieRef) {
-      try {
-        if (typeof lottieRef.setSpeed === 'function') {
-          lottieRef.setSpeed(newSpeed[0]);
-          console.log('🔥 SPEED SET SUCCESSFULLY');
-        } else if (lottieRef.setPlaybackRate) {
-          lottieRef.setPlaybackRate(newSpeed[0]);
-          console.log('🔥 PLAYBACK RATE SET');
-        } else {
-          console.log('🔥 NO SPEED METHOD AVAILABLE', Object.keys(lottieRef));
-        }
-      } catch (error) {
-        console.error('🔥 SPEED ERROR:', error);
+    // Create new animation data with modified frame rate
+    if (currentAnimationData) {
+      const modifiedData = { ...currentAnimationData };
+      modifiedData.fr = (modifiedData.fr || 24) * newSpeed[0]; // Modify frame rate
+      setCurrentAnimationData(modifiedData);
+      setAnimationKey(prev => prev + 1);
+    }
+  };
+
+  // Handle size changes - FIXED
+  const handleSizeChange = (newSize) => {
+    setSize(newSize);
+    console.log('🔥 SIZE CHANGE:', newSize[0]);
+    
+    if (currentAnimationData) {
+      const scaleMultiplier = newSize[0] / 100;
+      const modifiedData = JSON.parse(JSON.stringify(currentAnimationData)); // Deep copy
+      
+      // Scale the entire animation
+      if (modifiedData.w) modifiedData.w *= scaleMultiplier;
+      if (modifiedData.h) modifiedData.h *= scaleMultiplier;
+      
+      // Scale all layers
+      if (modifiedData.layers) {
+        modifiedData.layers.forEach(layer => {
+          if (layer.ks && layer.ks.s && layer.ks.s.k) {
+            if (Array.isArray(layer.ks.s.k)) {
+              layer.ks.s.k[0] *= scaleMultiplier;
+              layer.ks.s.k[1] *= scaleMultiplier;
+            }
+          }
+        });
       }
+      
+      setCurrentAnimationData(modifiedData);
+      setAnimationKey(prev => prev + 1);
     }
   };
 
@@ -359,20 +397,6 @@ const Editor = ({ animation, onClose, onSave }) => {
   const handlePlayPause = () => {
     const newPlaying = !isPlaying;
     setIsPlaying(newPlaying);
-    if (lottieRef) {
-      if (newPlaying) {
-        lottieRef.play();
-      } else {
-        lottieRef.pause();
-      }
-    }
-  };
-
-  // Handle size changes - modify the animation data itself
-  const handleSizeChange = (newSize) => {
-    setSize(newSize);
-    // Size control now just affects the container scaling
-    // We don't modify the animation data directly
   };
 
   const handlePromptSubmit = async () => {
