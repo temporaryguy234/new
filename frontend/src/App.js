@@ -477,7 +477,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={handlePlayPause}
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </Button>
@@ -485,7 +485,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             <div className="w-24">
               <Slider
                 value={speed}
-                onValueChange={setSpeed}
+                onValueChange={handleSpeedChange}
                 max={3}
                 min={0.1}
                 step={0.1}
@@ -509,6 +509,7 @@ const Editor = ({ animation, onClose, onSave }) => {
                   loop={true}
                   autoplay={isPlaying}
                   style={{ width: 400, height: 400 }}
+                  lottieRef={(instance) => setLottieRef(instance)}
                 />
               )}
             </div>
