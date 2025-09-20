@@ -380,37 +380,52 @@ const Editor = ({ animation, onClose, onSave }) => {
     
     setIsProcessing(true);
     try {
-      console.log('Submitting AI prompt:', prompt);
+      console.log('🔥 SENDING AI REQUEST:', {
+        prompt,
+        currentData: currentAnimationData
+      });
+      
       const response = await axios.post(`${API}/animations/edit`, {
         animationData: currentAnimationData,
         prompt: prompt,
         animationId: animation.id
       });
       
-      console.log('AI response:', response.data);
+      console.log('🔥 AI RESPONSE RECEIVED:', response.data);
       
       if (response.data.success && response.data.animationData) {
-        console.log('Updating animation data:', response.data.animationData);
+        console.log('🔥 UPDATING ANIMATION DATA');
+        console.log('Old data:', JSON.stringify(currentAnimationData).substring(0, 200));
+        console.log('New data:', JSON.stringify(response.data.animationData).substring(0, 200));
+        
+        // FORCE UPDATE
         setCurrentAnimationData(response.data.animationData);
-        setAnimationKey(prev => prev + 1); // Force Lottie re-render
+        setAnimationKey(prev => prev + 1);
+        
+        // Force a complete re-render after a small delay
+        setTimeout(() => {
+          setAnimationKey(prev => prev + 1);
+        }, 100);
+        
         toast({
-          title: "Success",
-          description: `Animation updated: ${response.data.message || 'Changes applied successfully!'}`
+          title: "✅ AI Success",
+          description: `Command "${prompt}" applied successfully!`
         });
         setPrompt('');
       } else {
+        console.log('🔥 AI RESPONSE NOT SUCCESSFUL:', response.data);
         toast({
-          title: "Info",
-          description: response.data.message || "AI processed the request, but no changes were detected.",
+          title: "⚠️ No Changes",
+          description: "AI processed but no changes detected",
           variant: "default"
         });
         setPrompt('');
       }
     } catch (error) {
-      console.error('AI editing error:', error);
+      console.error('🔥 AI ERROR:', error);
       toast({
-        title: "Error",
-        description: "Failed to process AI prompt. Please try again with a more specific request.",
+        title: "❌ Error",
+        description: `Failed: ${error.message}`,
         variant: "destructive"
       });
     } finally {
