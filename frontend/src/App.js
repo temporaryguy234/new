@@ -330,6 +330,7 @@ const Editor = ({ animation, onClose, onSave }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnimationData, setCurrentAnimationData] = useState(animation.animationData);
   const [animationKey, setAnimationKey] = useState(0); // Force re-render of Lottie
+  const [lottieRef, setLottieRef] = useState(null); // Reference to Lottie instance
   const { toast } = useToast();
 
   const handlePromptSubmit = async () => {
