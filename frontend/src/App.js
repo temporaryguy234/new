@@ -520,7 +520,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             <div 
               className="bg-white rounded-lg shadow-lg overflow-hidden"
               style={{
-                transform: `rotate(${rotation[0]}deg)`,
+                transform: `scale(${size[0] / 100}) rotate(${rotation[0]}deg)`,
                 opacity: opacity[0] / 100
               }}
             >
