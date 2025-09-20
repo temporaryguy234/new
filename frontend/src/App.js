@@ -496,7 +496,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             </div>
             <div className="flex space-x-2">
               <Textarea
-                placeholder="Try: 'make it bigger', 'change text color to blue', 'delete the title', 'replace 2023 with 2024'"
+                placeholder="Try specific commands like: 'change green color to blue', 'replace 2019 with 2024', 'make the animation 50% bigger', 'change the text to Hello World'"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className="flex-1 resize-none"
