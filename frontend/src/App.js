@@ -455,6 +455,64 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
       });
     }
   };
+
+  const handlePromptSubmit = async () => {
+    if (!prompt.trim()) return;
+    
+    setIsProcessing(true);
+    try {
+      console.log('🔥 SENDING AI REQUEST:', {
+        prompt,
+        currentData: currentAnimationData
+      });
+      
+      const response = await axios.post(`${API}/animations/edit`, {
+        animationData: currentAnimationData,
+        prompt: prompt,
+        animationId: animation.id
+      });
+      
+      console.log('🔥 AI RESPONSE RECEIVED:', response.data);
+      
+      if (response.data.success && response.data.animationData) {
+        console.log('🔥 UPDATING ANIMATION DATA');
+        console.log('Old data:', JSON.stringify(currentAnimationData).substring(0, 200));
+        console.log('New data:', JSON.stringify(response.data.animationData).substring(0, 200));
+        
+        // FORCE UPDATE
+        setCurrentAnimationData(response.data.animationData);
+        setAnimationKey(prev => prev + 1);
+        
+        // Force a complete re-render after a small delay
+        setTimeout(() => {
+          setAnimationKey(prev => prev + 1);
+        }, 100);
+        
+        toast({
+          title: "✅ AI Success",
+          description: `Command "${prompt}" applied successfully!`
+        });
+        setPrompt('');
+      } else {
+        console.log('🔥 AI RESPONSE NOT SUCCESSFUL:', response.data);
+        toast({
+          title: "⚠️ No Changes",
+          description: "AI processed but no changes detected",
+          variant: "default"
+        });
+        setPrompt('');
+      }
+    } catch (error) {
+      console.error('🔥 AI ERROR:', error);
+      toast({
+        title: "❌ Error",
+        description: `Failed: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
