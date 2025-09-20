@@ -143,7 +143,90 @@ const ExploreTab = ({ onOpenEditor }) => (
   </div>
 );
 
-const LibraryTab = ({ animations, onOpenEditor, onDeleteAnimation }) => {
+const MyProjectsTab = ({ projects, onOpenProject, onDeleteProject }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredProjects = projects.filter(proj => 
+    proj.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">My Projects</h2>
+        <p className="text-gray-600 mb-4">Your saved motion graphics projects</p>
+        
+        <div className="flex space-x-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+            Search
+          </Button>
+        </div>
+      </div>
+      
+      {filteredProjects.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FolderOpen className="w-8 h-8 text-green-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h3>
+          <p className="text-gray-600 mb-6">Create your first project by editing a template</p>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+            Browse Templates
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProjects.map((project) => (
+            <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                  {project.animationData ? (
+                    <Lottie 
+                      animationData={project.animationData} 
+                      loop={true}
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                      <Play className="w-12 h-12 text-green-500" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-1 truncate">{project.name}</h3>
+                <p className="text-sm text-gray-600 mb-3">Project</p>
+                <div className="flex space-x-2">
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => onOpenProject(project)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => onDeleteProject(project.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
   const [searchTerm, setSearchTerm] = useState('');
   
   const filteredAnimations = animations.filter(anim => 
