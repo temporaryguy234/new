@@ -570,7 +570,7 @@ const Editor = ({ animation, onClose, onSave }) => {
                   <label className="text-sm text-gray-600 mb-2 block">Playback Speed</label>
                   <Slider
                     value={speed}
-                    onValueChange={setSpeed}
+                    onValueChange={handleSpeedChange}
                     max={3}
                     min={0.1}
                     step={0.1}
