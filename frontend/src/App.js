@@ -515,70 +515,66 @@ const Editor = ({ animation, onClose, onSave }) => {
                   <input type="color" className="w-full h-8 rounded border" />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Width: 298</label>
+                  <label className="text-sm text-gray-600">Width</label>
+                  <input type="number" value="298" className="w-full px-2 py-1 border rounded text-sm" />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600">Height: 304</label>
+                  <label className="text-sm text-gray-600">Height</label>
+                  <input type="number" value="304" className="w-full px-2 py-1 border rounded text-sm" />
                 </div>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Animation</label>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-600 mb-1 block">Playback Speed: {speed[0]}x</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Playback Speed</label>
                   <Slider
                     value={speed}
                     onValueChange={setSpeed}
                     max={3}
                     min={0.1}
                     step={0.1}
+                    className="mb-1"
                   />
+                  <div className="text-right text-xs text-gray-500">{speed[0]}x</div>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600 mb-1 block">Size: {size[0]}%</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Size</label>
                   <Slider
                     value={size}
                     onValueChange={setSize}
                     max={200}
                     min={10}
                     step={5}
+                    className="mb-1"
                   />
+                  <div className="text-right text-xs text-gray-500">{size[0]}%</div>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600 mb-1 block">Rotation: {rotation[0]}°</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Rotation</label>
                   <Slider
                     value={rotation}
                     onValueChange={setRotation}
                     max={360}
                     min={-360}
                     step={1}
+                    className="mb-1"
                   />
+                  <div className="text-right text-xs text-gray-500">{rotation[0]}°</div>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-600 mb-1 block">Opacity: {opacity[0]}%</label>
+                  <label className="text-sm text-gray-600 mb-2 block">Opacity</label>
                   <Slider
                     value={opacity}
                     onValueChange={setOpacity}
                     max={100}
                     min={0}
                     step={1}
+                    className="mb-1"
                   />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Colors</label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Shape Layer 2 Stroke</label>
-                  <div className="w-6 h-6 bg-black rounded border"></div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Shape Layer 1 Fill</label>
-                  <div className="w-6 h-6 bg-red-500 rounded border"></div>
+                  <div className="text-right text-xs text-gray-500">{opacity[0]}%</div>
                 </div>
               </div>
             </div>
@@ -586,7 +582,7 @@ const Editor = ({ animation, onClose, onSave }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Template Info</label>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>ID: {animation.id}</p>
+                <p>ID: {animation.id.substring(0, 8)}...</p>
                 <p>Category: Motion Graphics</p>
                 <p>Tags: imported, lottie</p>
                 <p>Dimensions: 298×304</p>
