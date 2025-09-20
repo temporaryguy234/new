@@ -357,22 +357,8 @@ const Editor = ({ animation, onClose, onSave }) => {
   // Handle size changes - modify the animation data itself
   const handleSizeChange = (newSize) => {
     setSize(newSize);
-    if (currentAnimationData) {
-      const scaleValue = newSize[0];
-      const modifiedData = { ...currentAnimationData };
-      
-      // Modify the animation size by changing layer transforms
-      if (modifiedData.layers) {
-        modifiedData.layers.forEach(layer => {
-          if (layer.ks && layer.ks.s && layer.ks.s.k) {
-            layer.ks.s.k = [scaleValue, scaleValue];
-          }
-        });
-      }
-      
-      setCurrentAnimationData(modifiedData);
-      setAnimationKey(prev => prev + 1);
-    }
+    // Size control now just affects the container scaling
+    // We don't modify the animation data directly
   };
 
   const handlePromptSubmit = async () => {
