@@ -546,11 +546,25 @@ const Editor = ({ animation, onClose, onSave }) => {
                   autoplay={isPlaying}
                   style={{ width: 400, height: 400 }}
                   lottieRef={(instance) => {
+                    console.log('🔥 LOTTIE REF SET:', instance);
                     if (instance) {
                       setLottieRef(instance);
-                      if (speed[0] !== 1) {
-                        instance.setSpeed(speed[0]);
-                      }
+                      console.log('🔥 LOTTIE METHODS:', Object.keys(instance));
+                      
+                      // Try to set initial speed
+                      setTimeout(() => {
+                        if (speed[0] !== 1) {
+                          try {
+                            if (typeof instance.setSpeed === 'function') {
+                              instance.setSpeed(speed[0]);
+                            } else if (instance.setPlaybackRate) {
+                              instance.setPlaybackRate(speed[0]);
+                            }
+                          } catch (e) {
+                            console.error('🔥 INITIAL SPEED ERROR:', e);
+                          }
+                        }
+                      }, 100);
                     }
                   }}
                 />
