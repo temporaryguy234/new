@@ -144,9 +144,13 @@ Here's the current Lottie JSON:
 Return only the modified JSON:"""
         )
 
-        # Send message and get response
+        # Send message and get response with timeout
         logging.info("Sending request to AI model...")
-        response = await chat.send_message(user_message)
+        try:
+            response = await asyncio.wait_for(chat.send_message(user_message), timeout=30.0)
+        except asyncio.TimeoutError:
+            logging.error("AI request timed out after 30 seconds")
+            return make_simple_modifications(animation_data, prompt)
         
         logging.info(f"AI response received: {response[:200]}...")
         
