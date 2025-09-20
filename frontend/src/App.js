@@ -603,7 +603,7 @@ const Editor = ({ animation, onClose, onSave }) => {
                   <label className="text-sm text-gray-600 mb-2 block">Size</label>
                   <Slider
                     value={size}
-                    onValueChange={setSize}
+                    onValueChange={handleSizeChange}
                     max={200}
                     min={10}
                     step={5}
