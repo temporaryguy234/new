@@ -399,7 +399,62 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
     setIsPlaying(newPlaying);
   };
 
-  const handlePromptSubmit = async () => {
+  const handleSaveAsProject = async () => {
+    try {
+      const projectData = {
+        name: `${animation.name} - Project ${Date.now()}`,
+        templateId: animation.id,
+        animationData: currentAnimationData,
+        settings: { speed: speed[0], size: size[0], rotation: rotation[0], opacity: opacity[0] }
+      };
+      
+      await onSaveAsProject(projectData);
+      toast({
+        title: "✅ Project Saved",
+        description: "Your project has been saved to My Projects!"
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Error",
+        description: "Failed to save project.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleExport = async (format) => {
+    try {
+      const response = await axios.post(`${API}/export`, {
+        animationData: currentAnimationData,
+        format: format,
+        animationId: animation.id
+      });
+      
+      if (response.data.success) {
+        if (format === 'json') {
+          // Download JSON file
+          const blob = new Blob([JSON.stringify(response.data.data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = response.data.filename;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        
+        toast({
+          title: "✅ Export Success",
+          description: response.data.message || `Exported as ${format.toUpperCase()}`
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Export Failed",
+        description: "Failed to export animation",
+        variant: "destructive"
+      });
+    }
+  };
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
