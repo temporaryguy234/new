@@ -135,12 +135,19 @@ You MUST make the change exactly as requested. Return ONLY valid JSON."""
 
         # Create user message with animation data and prompt
         user_message = UserMessage(
-            text=f"""Modify this Lottie animation JSON based on the request: "{prompt}"
+            text=f"""TASK: {prompt}
 
-Here's the current Lottie JSON:
-{json.dumps(animation_data, indent=2)}
+CURRENT LOTTIE JSON:
+{json.dumps(animation_data, indent=1)}
 
-Return only the modified JSON:"""
+INSTRUCTIONS:
+1. Find the exact element mentioned in the task
+2. Make ONLY that change - nothing else
+3. If task says "delete BET", remove any text layer containing "BET"
+4. If task says "change color to green", find color properties and change to [0,1,0]
+5. If task says "replace 2019 with 2024", find "2019" in text and replace with "2024"
+
+Return ONLY the modified JSON:"""
         )
 
         # Send message and get response with timeout
