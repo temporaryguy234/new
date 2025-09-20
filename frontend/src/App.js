@@ -336,8 +336,22 @@ const Editor = ({ animation, onClose, onSave }) => {
   // Handle speed changes
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
-    if (lottieRef && lottieRef.setSpeed) {
-      lottieRef.setSpeed(newSpeed[0]);
+    console.log('🔥 SPEED CHANGE:', newSpeed[0], 'lottieRef:', lottieRef);
+    
+    if (lottieRef) {
+      try {
+        if (typeof lottieRef.setSpeed === 'function') {
+          lottieRef.setSpeed(newSpeed[0]);
+          console.log('🔥 SPEED SET SUCCESSFULLY');
+        } else if (lottieRef.setPlaybackRate) {
+          lottieRef.setPlaybackRate(newSpeed[0]);
+          console.log('🔥 PLAYBACK RATE SET');
+        } else {
+          console.log('🔥 NO SPEED METHOD AVAILABLE', Object.keys(lottieRef));
+        }
+      } catch (error) {
+        console.error('🔥 SPEED ERROR:', error);
+      }
     }
   };
 
