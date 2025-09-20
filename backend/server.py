@@ -75,6 +75,11 @@ class AIEditResponse(BaseModel):
     animationData: Dict[str, Any]
     message: str
 
+class ExportRequest(BaseModel):
+    animationData: Dict[str, Any]
+    format: str  # 'mp4', 'gif', 'json'
+    animationId: str
+
 # Helper functions
 def prepare_for_mongo(data):
     """Prepare data for MongoDB storage"""
