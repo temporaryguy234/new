@@ -202,33 +202,69 @@ def make_simple_modifications(animation_data: Dict[str, Any], prompt: str) -> Di
         
         logging.info(f"Making simple modifications for prompt: {prompt}")
         
+        # Delete specific text
+        if 'delete' in prompt_lower:
+            # Try to find what to delete
+            words_to_delete = []
+            if 'bet' in prompt_lower:
+                words_to_delete.append('BET')
+            if 'lottieshot' in prompt_lower:
+                words_to_delete.append('Lottieshot')
+            
+            for word in words_to_delete:
+                def remove_text_with_word(obj):
+                    if isinstance(obj, dict):
+                        # Check if this is a text layer with the word to delete
+                        if obj.get('ty') == 5:  # Text layer
+                            text_data = obj.get('t', {}).get('d', {}).get('k', {}).get('s')
+                            if text_data and word.lower() in text_data.lower():
+                                return None  # Mark for deletion
+                        
+                        # Recursively check other properties
+                        keys_to_remove = []
+                        for key, value in obj.items():
+                            if key == 'layers' and isinstance(value, list):
+                                obj[key] = [layer for layer in value if remove_text_with_word(layer) is not None]
+                            elif isinstance(value, (dict, list)):
+                                remove_text_with_word(value)
+                    elif isinstance(obj, list):
+                        return [item for item in obj if remove_text_with_word(item) is not None]
+                    return obj
+                
+                remove_text_with_word(modified_data)
+                logging.info(f"Attempted to remove text containing: {word}")
+        
         # Simple color changes
-        if 'blue' in prompt_lower and 'color' in prompt_lower:
-            # Find and change colors to blue
-            def change_colors_to_blue(obj):
+        elif any(color in prompt_lower for color in ['green', 'blue', 'red']):
+            target_color = [0, 1, 0]  # Default green
+            if 'blue' in prompt_lower:
+                target_color = [0, 0, 1]
+            elif 'red' in prompt_lower:
+                target_color = [1, 0, 0]
+            
+            def change_colors(obj):
                 if isinstance(obj, dict):
                     for key, value in obj.items():
                         if key == 'c' and isinstance(value, dict) and 'k' in value:
                             if isinstance(value['k'], list) and len(value['k']) >= 3:
-                                value['k'] = [0, 0, 1]  # Blue color
+                                value['k'] = target_color
+                                logging.info(f"Changed color to {target_color}")
                         elif isinstance(value, (dict, list)):
-                            change_colors_to_blue(value)
+                            change_colors(value)
                 elif isinstance(obj, list):
                     for item in obj:
-                        change_colors_to_blue(item)
+                        change_colors(item)
             
-            change_colors_to_blue(modified_data)
-            logging.info("Applied blue color change")
+            change_colors(modified_data)
             
-        # Simple number replacement
-        elif 'replace' in prompt_lower or 'change' in prompt_lower:
-            # Try to find numbers in the prompt
+        # Replace numbers/years
+        elif 'replace' in prompt_lower:
             import re
-            numbers = re.findall(r'\d{4}', prompt)  # Find 4-digit years
+            numbers = re.findall(r'\d{4}', prompt)
             if len(numbers) >= 2:
                 old_num, new_num = numbers[0], numbers[1]
-                # Convert to JSON string and replace
                 json_str = json.dumps(modified_data)
+                json_str = json_str.replace(f'"{old_num}"', f'"{new_num}"')
                 json_str = json_str.replace(old_num, new_num)
                 try:
                     modified_data = json.loads(json_str)
@@ -243,8 +279,8 @@ def make_simple_modifications(animation_data: Dict[str, Any], prompt: str) -> Di
                     for key, value in obj.items():
                         if key == 's' and isinstance(value, dict) and 'k' in value:
                             if isinstance(value['k'], list) and len(value['k']) >= 2:
-                                value['k'][0] = min(value['k'][0] * 1.2, 200)  # Increase by 20%
-                                value['k'][1] = min(value['k'][1] * 1.2, 200)
+                                value['k'][0] = min(value['k'][0] * 1.3, 200)
+                                value['k'][1] = min(value['k'][1] * 1.3, 200)
                         elif isinstance(value, (dict, list)):
                             increase_size(value)
                 elif isinstance(obj, list):
