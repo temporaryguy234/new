@@ -353,6 +353,8 @@ const Editor = ({ animation, onClose, onSave }) => {
       }
     }
   };
+
+  const handlePromptSubmit = async () => {
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
