@@ -610,8 +610,11 @@ const Editor = ({ animation, onClose, onSave, onSaveAsProject }) => {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600 text-white">
-            Save
+          <Button onClick={handleReset} variant="outline" className="bg-gray-500 hover:bg-gray-600 text-white">
+            Reset
+          </Button>
+          <Button onClick={handleSaveAsProject} className="bg-green-500 hover:bg-green-600 text-white">
+            Save as Project
           </Button>
           <Dialog>
             <DialogTrigger asChild>
