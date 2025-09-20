@@ -342,9 +342,13 @@ async def get_animations():
 
 @api_router.post("/animations", response_model=Animation)
 async def create_animation(animation: AnimationCreate):
-    """Create a new animation"""
+    """Create a new animation template"""
     try:
-        new_animation = Animation(**animation.dict())
+        new_animation = Animation(
+            **animation.dict(),
+            originalData=animation.animationData,  # Store original
+            isProject=False  # This is a template
+        )
         animation_dict = prepare_for_mongo(new_animation.dict())
         
         await db.animations.insert_one(animation_dict)
@@ -352,6 +356,81 @@ async def create_animation(animation: AnimationCreate):
     except Exception as e:
         logging.error(f"Error creating animation: {e}")
         raise HTTPException(status_code=500, detail="Failed to create animation")
+
+@api_router.get("/projects", response_model=List[Project])
+async def get_projects():
+    """Get all user projects"""
+    try:
+        projects = await db.projects.find().to_list(length=None)
+        return [Project(**parse_from_mongo(proj)) for proj in projects]
+    except Exception as e:
+        logging.error(f"Error fetching projects: {e}")
+        return []
+
+@api_router.post("/projects", response_model=Project)
+async def create_project(project: ProjectCreate):
+    """Create a new project from a template"""
+    try:
+        new_project = Project(**project.dict())
+        project_dict = prepare_for_mongo(new_project.dict())
+        
+        await db.projects.insert_one(project_dict)
+        return new_project
+    except Exception as e:
+        logging.error(f"Error creating project: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create project")
+
+@api_router.put("/projects/{project_id}", response_model=Project)
+async def update_project(project_id: str, update_data: dict):
+    """Update a project"""
+    try:
+        # Get existing project
+        existing = await db.projects.find_one({"id": project_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Prepare update data
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        update_dict = prepare_for_mongo(update_data)
+        
+        # Update in database
+        await db.projects.update_one(
+            {"id": project_id},
+            {"$set": update_dict}
+        )
+        
+        # Return updated project
+        updated = await db.projects.find_one({"id": project_id})
+        return Project(**parse_from_mongo(updated))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating project: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update project")
+
+@api_router.post("/export")
+async def export_animation(request: ExportRequest):
+    """Export animation in specified format"""
+    try:
+        if request.format == 'json':
+            return {
+                "success": True,
+                "data": request.animationData,
+                "filename": f"animation_{request.animationId}.json",
+                "contentType": "application/json"
+            }
+        elif request.format in ['mp4', 'gif']:
+            # For now, return success message - real export would need video generation
+            return {
+                "success": True,
+                "message": f"Export to {request.format.upper()} initiated. This feature requires video generation setup.",
+                "filename": f"animation_{request.animationId}.{request.format}"
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported export format")
+    except Exception as e:
+        logging.error(f"Export error: {e}")
+        raise HTTPException(status_code=500, detail="Export failed")
 
 @api_router.get("/animations/{animation_id}", response_model=Animation)
 async def get_animation(animation_id: str):
