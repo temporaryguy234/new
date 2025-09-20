@@ -333,7 +333,26 @@ const Editor = ({ animation, onClose, onSave }) => {
   const [lottieRef, setLottieRef] = useState(null); // Reference to Lottie instance
   const { toast } = useToast();
 
-  const handlePromptSubmit = async () => {
+  // Handle speed changes
+  const handleSpeedChange = (newSpeed) => {
+    setSpeed(newSpeed);
+    if (lottieRef) {
+      lottieRef.setSpeed(newSpeed[0]);
+    }
+  };
+
+  // Handle play/pause
+  const handlePlayPause = () => {
+    const newPlaying = !isPlaying;
+    setIsPlaying(newPlaying);
+    if (lottieRef) {
+      if (newPlaying) {
+        lottieRef.play();
+      } else {
+        lottieRef.pause();
+      }
+    }
+  };
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
